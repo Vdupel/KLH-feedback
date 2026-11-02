@@ -1,0 +1,28 @@
+# Vdupel/KLH-feedback: .github/workflows/hide-unsealed.yml (баг 025) — копия из KLH/tools/feedback_repo.
+# Незашифрованные issue и комментарии — шифруются копией и удаляются (hide_unsealed.py).
+name: hide-unsealed
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
+permissions:
+  issues: write
+concurrency:
+  group: hide-${{ github.event.issue.number }}
+  cancel-in-progress: false
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/guard
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "cryptography>=44"
+      - run: python .github/guard/hide_unsealed.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FEEDBACK_ADMIN_TOKEN: ${{ secrets.FEEDBACK_ADMIN_TOKEN }}
